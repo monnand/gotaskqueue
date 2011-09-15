@@ -2,7 +2,7 @@ Description
 ---------------
 This is a project derived from [uniqush](http://uniqush.org).
 
-With a task queue, a program can specify a task and its execution time. Then the task will be run at specified time point.
+With gotaskqueue, a program could define several tasks and execute them separately at specific time points.
 
 Install
 ---------------
