@@ -23,17 +23,40 @@ import (
     "time"
 )
 
+// A task interface.
 type Task interface {
+    // This method will be called at specific time.
+    // The parameter is current time when this method is executed,
+    // in nanoseconds since Unix epoch.
     Run(time int64)
+
+    // Return the executing time, in terms of
+    // number of nanoseconds since the Unix epoch,
+    // January 1, 1970 00:00:00 UTC.
     ExecTime() int64
 }
 
+// Usually, users do not want to define ExecTime() when they define a task.
+// They may only want to tell the task queue: execute this task after 3 seconds.
+// In this case, the user-defined task could composit this structure.
 type TaskTime struct {
     execTime int64
 }
 
 func (t *TaskTime) ExecTime() int64 {
     return t.execTime
+}
+
+func (t *TaskTime) SetExecTime(nanosec int64) {
+    t.execTime = nanosec
+}
+
+func (t *TaskTime) After(seconds int64) {
+    t.execTime = (time.Seconds() + seconds) * 1E9
+}
+
+func (t *TaskTime) AfterNanoseconds(nanoseconds int64) {
+    t.execTime = time.Nanoseconds() + nanoseconds
 }
 
 type TaskQueue struct {
