@@ -12,13 +12,16 @@ type MyTask struct {
     stop chan bool
     // TaskTime defines time-related operations,
     // so that you do not need to define your own ExecTime().
-    // By compositing TaskTime, you can use After(),
-    // AfterNanoseconds() to specify the executing time.
+    // By composing TaskTime, you can use After(),
+    // AfterNanoseconds() to specify the time point at which
+    // the task will be processed by calling its Run()
+    // method.
     gotaskqueue.TaskTime
 }
 
 // Just a hello world.
 func (t *MyTask) Run(currentTime int64) {
+    // Print the task id and exit
     fmt.Printf("I am #%d task\n", t.id)
     t.stop <- true
 }
@@ -42,8 +45,7 @@ func main() {
         t.id = i
         t.stop = stop
 
-        // The execution time of the task.
-        // The task with id i, will be executed after
+        // The task with id i, will be processed after
         // i + 1 seconds. (i starts from 0).
         // Because we use gotaskqueue.TaskTime, it is easy to 
         // to use the After() method.

@@ -15,7 +15,7 @@
  *
  */
 
-// With gotaskqueue, a program could define several tasks and execute them separately at specific time points.
+// With gotaskqueue, a program could define several tasks and process them separately at specific time points.
 package gotaskqueue
 
 import (
@@ -25,20 +25,34 @@ import (
 
 // A task interface.
 type Task interface {
-    // This method will be called at specific time.
+    // This method will be called at specified time point.
     // The parameter is current time when this method is executed,
     // in nanoseconds since Unix epoch.
     Run(time int64)
 
-    // Return the executing time, in terms of
-    // number of nanoseconds since the Unix epoch,
+    // Return the time point at which the task will be processed,
+    // in terms of number of nanoseconds since the Unix epoch,
     // January 1, 1970 00:00:00 UTC.
     ExecTime() int64
 }
 
-// Usually, users do not want to define ExecTime() when they define a task.
-// They may only want to tell the task queue: execute this task after 3 seconds.
-// In this case, the user-defined task could composit this structure.
+// Usually, users do not want to define ExecTime() by themselves.
+// They may only want to tell the task queue: process this task after 3 seconds.
+// In this case, the user-defined task could compose this structure.
+// For example, user may define a struct like this:
+//
+//      type MyTask struct { id int; gotaskqueue.TaskTime }
+//
+// Then set the time by calling After()/AfterNanoseconds():
+//       
+//      t := new(MyTask)
+//      t.id = 0
+//      t.After(10)
+//
+// Now we can send the task to a task queue through the channel:
+//
+//      ch <- t
+//
 type TaskTime struct {
     execTime int64
 }
@@ -51,6 +65,8 @@ func (t *TaskTime) SetExecTime(nanosec int64) {
     t.execTime = nanosec
 }
 
+// After sets the processing time of the task to
+// the current time plus seconds seconds.
 func (t *TaskTime) After(seconds int64) {
     t.execTime = (time.Seconds() + seconds) * 1E9
 }
@@ -66,21 +82,25 @@ type TaskQueue struct {
 }
 
 const (
-    MAX_TIME int64 = 0x0FFFFFFFFFFFFFFF
+    maxTime int64 = 0x0FFFFFFFFFFFFFFF
 )
 
 func taskBefore (a, b interface{}) bool{
     return a.(Task).ExecTime() < b.(Task).ExecTime()
 }
 
+// Returns a new task queue.
+// The user could submit new task through channel ch.
 func NewTaskQueue(ch <-chan Task) *TaskQueue {
     ret := new(TaskQueue)
     ret.tree = llrb.New(taskBefore)
     ret.ch = ch
-    ret.waitTime = MAX_TIME
+    ret.waitTime = maxTime
     return ret
 }
 
+// Run the task queue. Usually, it should be run in a
+// separate goroutine.
 func (t *TaskQueue) Run() {
     for {
         select {
@@ -99,7 +119,7 @@ func (t *TaskQueue) Run() {
             t.tree.ReplaceOrInsert(task)
             x := t.tree.Min()
             if x == nil {
-                t.waitTime = MAX_TIME
+                t.waitTime = maxTime
                 continue
             }
             task = x.(Task)
@@ -107,7 +127,7 @@ func (t *TaskQueue) Run() {
         case <-time.After(t.waitTime):
             x := t.tree.Min()
             if x == nil {
-                t.waitTime = MAX_TIME
+                t.waitTime = maxTime
                 continue
             }
             task := x.(Task)
@@ -120,7 +140,7 @@ func (t *TaskQueue) Run() {
                 t.tree.DeleteMin()
                 x = t.tree.Min()
                 if x == nil {
-                    t.waitTime = MAX_TIME
+                    t.waitTime = maxTime
                     task = nil
                     break
                 }
