@@ -22,7 +22,11 @@ Example
     type MyTask struct {
         id int
         stop chan bool
-        // See details below
+        // TaskTime defines time-related operations,
+        // so that you do not need to define your own ExecTime().
+        // By compositing TaskTime, you can use After(),
+        // AfterNanoseconds() to specify the executing time.
+        // Details could be found below.
         gotaskqueue.TaskTime
     }
 
@@ -53,7 +57,7 @@ Example
 
             // The execution time of the task.
             // The task with id i, will be executed after
-            // i + seconds. (i starts from 0).
+            // i + 1 seconds. (i starts from 0).
             // Because we use gotaskqueue.TaskTime, it is easy to 
             // to use the After() method.
             t.After(int64(i) + 1)
