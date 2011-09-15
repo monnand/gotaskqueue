@@ -3,7 +3,6 @@ package main
 import (
     "github.com/monnand/gotaskqueue"
     "fmt"
-    "time"
 )
 
 // Create a new implementation of gotaskqueue.Task,
