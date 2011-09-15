@@ -23,20 +23,14 @@ Example
     type MyTask struct {
         id int
         stop chan bool
-        execTime int64
+        // See details below
+        gotaskqueue.TaskTime
     }
 
     // Just a hello world.
     func (t *MyTask) Run(currentTime int64) {
         fmt.Printf("I am #%d task\n", t.id)
         t.stop <- true
-    }
-
-    // Return the executing time, in terms of
-    // number of nanoseconds since the Unix epoch,
-    // January 1, 1970 00:00:00 UTC.
-    func (t *MyTask) ExecTime() int64 {
-        return t.execTime
     }
 
     func main() {
@@ -60,8 +54,10 @@ Example
 
             // The execution time of the task.
             // The task with id i, will be executed after
-            // i + seconds. (i starts from 0)
-            t.execTime = time.Nanoseconds() + (int64(i) + 1) * 1E9
+            // i + seconds. (i starts from 0).
+            // Because we use gotaskqueue.TaskTime, it is easy to 
+            // to use the After() method.
+            t.After(int64(i) + 1)
             ch <- t
         }
 
