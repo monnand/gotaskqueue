@@ -36,7 +36,7 @@ func (t *ExpBackoffTask) Run(curtime int64) {
         os.Exit(0)
     }
     t.backofftime = t.backofftime << 1
-    t.execTime = curtime + t.backofftime
+    t.AfterNanoseconds(t.backofftime)
     fmt.Printf("I run @ %d, I will wait %d nanoseconds to run @ %ds %dns\n",
                curtime, t.backofftime, t.ExecTime()/1E9, t.execTime)
     t.ch <- t
