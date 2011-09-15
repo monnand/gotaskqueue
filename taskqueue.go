@@ -41,7 +41,10 @@ type Task interface {
 // In this case, the user-defined task could compose this structure.
 // For example, user may define a struct like this:
 //
-//      type MyTask struct { id int; gotaskqueue.TaskTime }
+//      type MyTask struct {
+//          id int
+//          gotaskqueue.TaskTime
+//      }
 //
 // Then set the time by calling After()/AfterNanoseconds():
 //       
@@ -52,6 +55,7 @@ type Task interface {
 // Now we can send the task to a task queue through the channel:
 //
 //      ch <- t
+// Definition of TaskTime:
 //
 type TaskTime struct {
     execTime int64

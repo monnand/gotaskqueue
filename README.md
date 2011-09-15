@@ -20,7 +20,7 @@ This example creates 5 tasks. Every second, one task will be processed.
         "fmt"
     )
 
-    // Create a new implementation of gotaskqueue.Task,
+    // Define a new implementation of gotaskqueue.Task,
     // which must implement the Run() and ExecTime() methods.
     type MyTask struct {
         id int
@@ -68,6 +68,7 @@ This example creates 5 tasks. Every second, one task will be processed.
             ch <- t
         }
 
+        // wait all tasks to be processed.
         for i := 0; i < nr_tasks; i++ {
             <-stop
         }

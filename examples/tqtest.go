@@ -5,7 +5,7 @@ import (
     "fmt"
 )
 
-// Create a new implementation of gotaskqueue.Task,
+// Define a new implementation of gotaskqueue.Task,
 // which must implement the Run() and ExecTime() methods.
 type MyTask struct {
     id int
@@ -53,6 +53,7 @@ func main() {
         ch <- t
     }
 
+    // wait all tasks to be processed.
     for i := 0; i < nr_tasks; i++ {
         <-stop
     }
