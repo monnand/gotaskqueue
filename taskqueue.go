@@ -15,6 +15,7 @@
  *
  */
 
+// With gotaskqueue, a program could define several tasks and execute them separately at specific time points.
 package gotaskqueue
 
 import (
