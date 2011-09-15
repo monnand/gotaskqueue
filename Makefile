@@ -1,6 +1,6 @@
 include $(GOROOT)/src/Make.inc
 
-TARG=gotaskqueue
+TARG=github.com/monnand/gotaskqueue
 GOFILES=\
 	taskqueue.go\
 
