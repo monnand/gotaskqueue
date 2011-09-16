@@ -17,6 +17,7 @@ type Runnable interface {
 type CommonTask struct {
     task Runnable
     execTime int64
+    ch chan<- Task
 }
 
 func (t *CommonTask) After(seconds int64) {
@@ -35,21 +36,25 @@ func (t *CommonTask) Run(ct int64) {
     if t.task != nil {
         t.task.Run(t)
     }
+    if t.execTime > ct {
+        t.ch <- t
+    }
 }
 
 func (t *CommonTask) Stop() {
+    t.execTime = -1
     t.task = nil
 }
 
-func NewCommonTask(task Runnable) Task {
+func NewCommonTask(task Runnable, ch chan<- Task) *CommonTask {
     ret := new(CommonTask)
     ret.task = task
+    ret.ch = ch
     return ret
 }
 
 type PeriodicTask struct {
     period int64
-    ch chan<- Task
     CommonTask
 }
 
@@ -79,7 +84,7 @@ func (t *PeriodicTask) SetPeriodInNanoseconds(ns int64) {
     t.period = ns
 }
 
-func NewPeriodicTask(task Runnable, ch chan<- Task) Task {
+func NewPeriodicTask(task Runnable, ch chan<- Task) *PeriodicTask {
     ret := new(PeriodicTask)
     ret.task = task
     ret.period = -1
