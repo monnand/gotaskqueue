@@ -58,10 +58,6 @@ type PeriodicTask struct {
     CommonTask
 }
 
-func (t *PeriodicTask) ExecTime() int64 {
-    return t.execTime
-}
-
 func (t *PeriodicTask) Run(ct int64) {
     t.execTime = ct + t.period
     if t.task != nil {
@@ -90,5 +86,33 @@ func NewPeriodicTask(task Runnable, ch chan<- Task) *PeriodicTask {
     ret.period = -1
     ret.ch = ch
     return ret
+}
+
+type ExpBackoffTask struct {
+    backoff int64
+    CommonTask
+}
+
+func NewExpBackoffTask(task Runnable, ch chan<- Task, backoff int64) *ExpBackoffTask {
+    ret := new(ExpBackoffTask)
+    ret.task = task
+    ret.backoff = backoff
+    ret.ch = ch
+    return ret
+}
+
+func (t *ExpBackoffTask) Run(ct int64) {
+    if t.task != nil {
+        t.task.Run(t)
+    } else {
+        return
+    }
+    if t.backoff <= 0 {
+        return
+    }
+    t.execTime = ct + t.backoff
+    t.backoff <<= 1
+    t.ch <- t
+    return
 }
 
