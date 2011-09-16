@@ -8,6 +8,10 @@ Install
 ---------------
 `goinstall github.com/monnand/gotaskqueue`
 
+Documentation
+---------------
+The official document is [here](http://uniqush.org/wiki/UniqushGoTaskQueue)
+
 Example
 --------------
 
