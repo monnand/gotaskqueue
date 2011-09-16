@@ -12,64 +12,61 @@ Example
 --------------
 
 This example creates 5 tasks. Every second, one task will be processed.
+Other examples could be found under the `examples` directory.
 
     package main
 
     import (
-        "github.com/monnand/gotaskqueue"
+        tq "github.com/monnand/gotaskqueue"
         "fmt"
     )
 
-    // Define a new implementation of gotaskqueue.Task,
-    // which must implement the Run() and ExecTime() methods.
-    type MyTask struct {
+    // We define a struct to do the job.
+    type MyJob struct {
         id int
-        stop chan bool
-        // TaskTime defines time-related operations,
-        // so that you do not need to define your own ExecTime().
-        // By composing TaskTime, you can use After(),
-        // AfterNanoseconds() to specify the time point at which
-        // the task will be processed by calling its Run()
-        // method.
-        gotaskqueue.TaskTime
+        ch chan bool
     }
 
-    // Just a hello world.
-    func (t *MyTask) Run(currentTime int64) {
-        // Print the task id and exit
-        fmt.Printf("I am #%d task\n", t.id)
-        t.stop <- true
+    // Everytime the job is run, it only print its id.
+    // The parameter t is used to control the time of next running.
+    // If we only want the job run once, then just ignore the
+    // parameter t.
+    // More details about using this parameter, see:
+    //  examples/expbackoff/expbackoff.go
+    func (j *MyJob) Run(t tq.TimeSetter) {
+        fmt.Printf("Hello, I am #%d task.\n", j.id)
+        j.ch <- true
     }
 
     func main() {
         stop := make(chan bool)
-        nr_tasks := 5
 
         // Create a channel to put task
-        ch := make(chan gotaskqueue.Task)
+        ch := make(chan tq.Task)
 
         // Create a new task queue
-        q := gotaskqueue.NewTaskQueue(ch)
+        q := tq.NewTaskQueue(ch)
 
         // Run this task queue in a separate goroutine
         go q.Run()
 
-        // Insert 5 tasks into the queue.
-        for i := 0; i < nr_tasks; i++ {
-            t := new(MyTask)
-            t.id = i
-            t.stop = stop
+        // We create 5 tasks.
+        // Every second, there will be one running task.
+        for i := 0; i < 5; i++ {
+            j := new(MyJob)
+            j.id = i
+            j.ch = stop
 
-            // The task with id i, will be processed after
-            // i + 1 seconds. (i starts from 0).
-            // Because we use gotaskqueue.TaskTime, it is easy to 
-            // to use the After() method.
+            // We need two parameters: the Runnable interface,
+            // and the channel communicates with task queue.
+            t := tq.NewCommonTask(j, ch)
+
+            // Set the running time.
+            // The task with id i will be run after i + 1 seconds.
             t.After(int64(i) + 1)
             ch <- t
         }
-
-        // wait all tasks to be processed.
-        for i := 0; i < nr_tasks; i++ {
+        for i := 0; i < 5; i++ {
             <-stop
         }
     }

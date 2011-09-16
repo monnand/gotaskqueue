@@ -1,3 +1,5 @@
+// IMPORTANT: This kind of way to use task queue should be deprecated.
+//
 package main
 
 import (
