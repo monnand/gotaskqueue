@@ -4,44 +4,53 @@ import (
     "time"
 )
 
-type Runnable interface {
-    Run()
+type TimeSetter interface {
+    After(s int64)
+    AfterNanoseconds(ns int64)
+    Stop()
 }
 
-type OneTimeTask struct {
+type Runnable interface {
+    Run(s TimeSetter)
+}
+
+type CommonTask struct {
     task Runnable
     execTime int64
 }
 
-func (t *OneTimeTask) After(seconds int64) {
+func (t *CommonTask) After(seconds int64) {
     t.execTime = (time.Seconds() + seconds) * 1E9
 }
 
-func (t *OneTimeTask) AfterNanoseconds(nanoseconds int64) {
+func (t *CommonTask) AfterNanoseconds(nanoseconds int64) {
     t.execTime = time.Nanoseconds() + nanoseconds
 }
 
-func (t *OneTimeTask) ExecTime() int64 {
+func (t *CommonTask) ExecTime() int64 {
     return t.execTime
 }
 
-func (t *OneTimeTask) Run(ct int64) {
+func (t *CommonTask) Run(ct int64) {
     if t.task != nil {
-        t.task.Run()
+        t.task.Run(t)
     }
 }
 
-func NewOneTimeTask(task Runnable) Task {
-    ret := new(OneTimeTask)
+func (t *CommonTask) Stop() {
+    t.task = nil
+}
+
+func NewCommonTask(task Runnable) Task {
+    ret := new(CommonTask)
     ret.task = task
     return ret
 }
 
 type PeriodicTask struct {
-    task Runnable
     period int64
-    execTime int64
     ch chan<- Task
+    CommonTask
 }
 
 func (t *PeriodicTask) ExecTime() int64 {
@@ -51,7 +60,9 @@ func (t *PeriodicTask) ExecTime() int64 {
 func (t *PeriodicTask) Run(ct int64) {
     t.execTime = ct + t.period
     if t.task != nil {
-        t.task.Run()
+        t.task.Run(t)
+    } else {
+        return
     }
     if t.period <= 0 {
         return
