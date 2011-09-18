@@ -96,7 +96,7 @@ type ExpBackoffTask struct {
 func NewExpBackoffTask(task Runnable, ch chan<- Task, backoff int64) *ExpBackoffTask {
     ret := new(ExpBackoffTask)
     ret.task = task
-    ret.backoff = backoff
+    ret.backoff = backoff * 1E9
     ret.ch = ch
     return ret
 }
